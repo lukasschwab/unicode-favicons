@@ -93,20 +93,20 @@ label {
 }
 
 input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px;
     border: 1px solid #000;
     border-radius: 0;
     text-align: left;
 }
 
-/* Adjust search input to be left-aligned */
-.search-controls input[type="text"] {
-    text-align: left;
-    width: 100%;
-    margin-bottom: 1rem;
-    box-sizing: border-box;
-    border-radius: 0;
-    border: 1px solid #000;
+#keywordInput {
+    max-width: 300px;
+}
+
+#codepointInput {
+    max-width: 7em;
 }
 
 .color-controls {

@@ -61,14 +61,24 @@
         <div class="container search-panel">
             <h2>Unicode glyphs</h2>
             
-            <div class="search-controls" style="display: flex; gap: 10px;">
-                <input type="text" id="keywordInput" placeholder="Keyword (e.g. 'smile')" autocomplete="off" style="flex: 2;">
-                <input type="text" id="codepointInput" placeholder="Hex Prefix (e.g. '1F')" autocomplete="off" style="flex: 1;">
-            </div>
-            <label>Filter by block</label>
-            <div class="filter-controls">
-                <div id="blockFilters" class="block-filters">
-                    <!-- Checkboxes injected by JS -->
+            <div class="controls">
+                <div class="control-group">
+                    <label for="keywordInput">Keyword search</label>
+                    <input type="text" id="keywordInput" placeholder="e.g. 'smile'" autocomplete="off">
+                </div>
+
+                <div class="control-group">
+                    <label for="codepointInput">Hex prefix</label>
+                    <input type="text" id="codepointInput" placeholder="e.g. '1F'" autocomplete="off">
+                </div>
+
+                <div class="control-group">
+                    <label>Filter by block</label>
+                    <div class="filter-controls">
+                        <div id="blockFilters" class="block-filters">
+                            <!-- Checkboxes injected by JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
