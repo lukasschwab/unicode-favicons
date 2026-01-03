@@ -1,10 +1,9 @@
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
+    font-family: sans-serif;
+    color: black;
     display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Align to top */
+    justify-content: flex-start;
+    align-items: flex-start;
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -16,8 +15,6 @@ body {
     flex-direction: row;
     gap: 20px;
     width: 100%;
-    max-width: 1300px;
-    margin-top: 20px;
     align-items: flex-start;
 }
 
@@ -25,14 +22,16 @@ body {
 .container {
     background: white;
     padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    text-align: center;
+    border: 1px solid #000;
+    text-align: left;
 }
 
 .generator-panel {
     flex: 1;
     max-width: 400px;
+    position: sticky;
+    top: 20px;
+    height: fit-content; /* Ensure it doesn't stretch if align-items changes */
 }
 
 .search-panel {
@@ -52,6 +51,7 @@ body {
         width: 100%;
         max-width: 500px;
         flex: none;
+        position: static;
     }
 
     .search-panel {
@@ -63,7 +63,6 @@ h1, h2 {
     margin-bottom: 1rem;
     margin-top: 0;
     font-size: 1.5rem;
-    color: #2c3e50;
 }
 
 .controls {
@@ -83,7 +82,7 @@ h1, h2 {
 label {
     font-weight: 500;
     font-size: 0.9rem;
-    color: #555;
+    color: dimgray;
 }
 
 .checkbox-control {
@@ -95,10 +94,9 @@ label {
 
 input[type="text"] {
     padding: 10px;
-    font-size: 1.2rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    text-align: center;
+    border: 1px solid #000;
+    border-radius: 0;
+    text-align: left;
 }
 
 /* Adjust search input to be left-aligned */
@@ -107,6 +105,8 @@ input[type="text"] {
     width: 100%;
     margin-bottom: 1rem;
     box-sizing: border-box;
+    border-radius: 0;
+    border: 1px solid #000;
 }
 
 .color-controls {
@@ -119,9 +119,10 @@ input[type="color"] {
     width: 60px;
     height: 40px;
     padding: 0;
-    border: none;
+    border: 1px solid #000;
     cursor: pointer;
     background: none;
+    border-radius: 0;
 }
 
 #hexInput, #bgHexInput {
@@ -129,9 +130,10 @@ input[type="color"] {
     padding: 10px;
     font-family: monospace;
     font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid #000;
+    border-radius: 0;
     text-transform: uppercase;
+    text-align: left;
 }
 
 input[type="range"] {
@@ -146,15 +148,15 @@ input[type="range"] {
 .canvas-container {
     width: 128px;
     height: 128px;
-    margin: 0 auto;
-    border: 1px dashed #ccc;
+    margin: 0;
+    border: 1px solid #000;
     background-image: linear-gradient(45deg, #eee 25%, transparent 25%), 
                       linear-gradient(-45deg, #eee 25%, transparent 25%), 
                       linear-gradient(45deg, transparent 75%, #eee 75%), 
                       linear-gradient(-45deg, transparent 75%, #eee 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -164,24 +166,41 @@ canvas {
     display: block;
 }
 
-button {
-    background-color: #007bff;
-    color: white;
+.link-button {
+    background: none;
     border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    width: auto;
+    font-size: 0.9rem;
+}
+
+.link-button:hover {
+    background: none;
+    color: darkblue;
+}
+
+button {
+    background-color: #000;
+    color: white;
+    border: 1px solid #000;
     padding: 12px 24px;
     font-size: 1rem;
-    border-radius: 6px;
+    border-radius: 0;
     cursor: pointer;
     transition: background-color 0.2s;
     width: 100%;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #333;
 }
 
 button:disabled {
-    background-color: #ccc;
+    background-color: #999;
+    border-color: #999;
     cursor: not-allowed;
 }
 
@@ -191,9 +210,9 @@ button:disabled {
     max-height: 120px;
     min-height: 80px;
     overflow-y: auto;
-    border: 1px solid #eee;
+    border: 1px solid #000;
     padding: 10px;
-    border-radius: 4px;
+    border-radius: 0;
     text-align: left;
 }
 
@@ -212,9 +231,9 @@ button:disabled {
 /* Search Results Grid */
 .search-results {
     flex-grow: 1;
-    border: 1px solid #eee;
+    border: 1px solid #000;
     padding: 10px;
-    border-radius: 4px;
+    border-radius: 0;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 10px;
@@ -222,8 +241,8 @@ button:disabled {
 }
 
 .result-item {
-    border: 1px solid #f0f0f0;
-    border-radius: 4px;
+    border: 1px solid #eee;
+    border-radius: 0;
     padding: 10px;
     text-align: center;
     cursor: pointer;
@@ -236,8 +255,8 @@ button:disabled {
 }
 
 .result-item:hover {
-    background-color: #f9f9f9;
-    border-color: #007bff;
+    background-color: #f0f0f0;
+    border-color: #000;
 }
 
 .result-char {

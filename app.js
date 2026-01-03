@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rotationInput = document.getElementById('rotationInput');
     const rotationValue = document.getElementById('rotationValue');
+    const rotateCCW = document.getElementById('rotateCCW');
+    const rotateCW = document.getElementById('rotateCW');
     const previewCanvas = document.getElementById('previewCanvas');
     const downloadBtn = document.getElementById('downloadBtn');
 
@@ -38,6 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners
     charInput.addEventListener('input', updatePreview);
     rotationInput.addEventListener('input', updatePreview);
+
+    // Rotation Buttons
+    rotateCCW.addEventListener('click', () => {
+        let current = parseInt(rotationInput.value, 10);
+        current = (current - 45 + 360) % 360;
+        rotationInput.value = current;
+        updatePreview();
+    });
+
+    rotateCW.addEventListener('click', () => {
+        let current = parseInt(rotationInput.value, 10);
+        current = (current + 45) % 360;
+        rotationInput.value = current;
+        updatePreview();
+    });
 
     // Foreground Color Sync
     colorInput.addEventListener('input', (e) => {
@@ -112,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 unicodeData = window.UNICODE_DATA;
                 
                 renderBlockFilters(unicodeBlocks);
-                searchResultsContainer.innerHTML = '<p class="placeholder-text">Data loaded. Type to search.</p>';
+                searchResultsContainer.innerHTML = '';
             } else {
                 throw new Error('Data format incorrect');
             }
@@ -229,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show all blocks
             const items = blockFiltersContainer.querySelectorAll('.block-filter-item');
             items.forEach(item => item.style.display = 'flex');
-            searchResultsContainer.innerHTML = '<p class="placeholder-text">Type at least 2 characters...</p>';
+            searchResultsContainer.innerHTML = '';
             return;
         }
 

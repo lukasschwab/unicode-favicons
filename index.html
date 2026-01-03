@@ -10,12 +10,12 @@
 <body>
     <div class="main-wrapper">
         <div class="container generator-panel">
-            <h1>Favicon Generator</h1>
-            
+            <h1>Favicon generator</h1>
+
             <div class="controls">
                 <div class="control-group">
                     <label for="charInput">Character</label>
-                    <input type="text" id="charInput" value="✨" maxlength="2" placeholder="e.g. A or 😃">
+                    <input type="text" id="charInput" value="𓅀" maxlength="2" placeholder="e.g. A or 𓄆">
                 </div>
 
                 <div class="control-group">
@@ -40,7 +40,11 @@
 
                 <div class="control-group">
                     <label for="rotationInput">Rotation (<span id="rotationValue">0</span>°)</label>
-                    <input type="range" id="rotationInput" min="0" max="360" value="0">
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                         <button id="rotateCCW" class="link-button">-45°</button>
+                         <input type="range" id="rotationInput" min="0" max="360" value="0" style="flex: 1;">
+                         <button id="rotateCW" class="link-button">+45°</button>
+                    </div>
                 </div>
             </div>
 
@@ -51,19 +55,18 @@
                 </div>
             </div>
 
-            <button id="downloadBtn">Download Assets (ZIP)</button>
+            <button id="downloadBtn">Download icons (zip)</button>
         </div>
 
         <div class="container search-panel">
-            <h2>Find Character</h2>
+            <h2>Unicode glyphs</h2>
             
             <div class="search-controls" style="display: flex; gap: 10px;">
                 <input type="text" id="keywordInput" placeholder="Keyword (e.g. 'smile')" autocomplete="off" style="flex: 2;">
                 <input type="text" id="codepointInput" placeholder="Hex Prefix (e.g. '1F')" autocomplete="off" style="flex: 1;">
             </div>
-
+            <label>Filter by block</label>
             <div class="filter-controls">
-                <label>Filter by Block:</label>
                 <div id="blockFilters" class="block-filters">
                     <!-- Checkboxes injected by JS -->
                 </div>
@@ -71,7 +74,6 @@
 
             <div id="searchResults" class="search-results">
                 <!-- Results injected by JS -->
-                <p class="placeholder-text">Type to search...</p>
             </div>
         </div>
     </div>
