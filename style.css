@@ -129,7 +129,6 @@ input[type="color"] {
     flex-grow: 1;
     padding: 10px;
     font-family: monospace;
-    font-size: 1rem;
     border: 1px solid #000;
     border-radius: 0;
     text-transform: uppercase;
@@ -174,7 +173,6 @@ canvas {
     cursor: pointer;
     padding: 0;
     width: auto;
-    font-size: 0.9rem;
 }
 
 .link-button:hover {
@@ -187,7 +185,6 @@ button {
     color: white;
     border: 1px solid #000;
     padding: 12px 24px;
-    font-size: 1rem;
     border-radius: 0;
     cursor: pointer;
     transition: background-color 0.2s;
