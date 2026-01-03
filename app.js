@@ -66,6 +66,301 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- SEARCH LOGIC ---
+    const keywordInput = document.getElementById('keywordInput');
+    const codepointInput = document.getElementById('codepointInput');
+    const blockFiltersContainer = document.getElementById('blockFilters');
+    const searchResultsContainer = document.getElementById('searchResults');
+
+    // Debounce Utility
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    let unicodeData = null;
+    let unicodeBlocks = null;
+    let isDataLoading = false;
+
+    // Load Data Immediately
+    function loadData() {
+        if (isDataLoading) return;
+        isDataLoading = true;
+        searchResultsContainer.innerHTML = '<p class="placeholder-text">Loading Unicode data...</p>';
+        
+        // Helper to load script
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.body.appendChild(s);
+            });
+        };
+
+        Promise.all([
+            loadScript('unicode_blocks.js'),
+            loadScript('unicode_data.js')
+        ]).then(() => {
+            if (window.UNICODE_BLOCKS && window.UNICODE_DATA) {
+                unicodeBlocks = window.UNICODE_BLOCKS;
+                unicodeData = window.UNICODE_DATA;
+                
+                renderBlockFilters(unicodeBlocks);
+                searchResultsContainer.innerHTML = '<p class="placeholder-text">Data loaded. Type to search.</p>';
+            } else {
+                throw new Error('Data format incorrect');
+            }
+        }).catch(err => {
+            console.error(err);
+            searchResultsContainer.innerHTML = '<p class="placeholder-text" style="color:red">Error loading data.</p>';
+        }).finally(() => {
+            isDataLoading = false;
+        });
+    }
+    loadData();
+
+    function renderBlockFilters(blocks) {
+        blockFiltersContainer.innerHTML = '';
+        blocks.forEach(block => {
+            const div = document.createElement('div');
+            div.className = 'block-filter-item';
+            div.dataset.blockName = block.name; // For filtering visibility
+            
+            // Generate a safe ID
+            const safeId = 'block-' + block.name.replace(/[^a-zA-Z0-9]/g, '-');
+            
+            div.innerHTML = `
+                <input type="checkbox" id="${safeId}" value="${block.name}" checked>
+                <label for="${safeId}">${block.name}</label>
+            `;
+            blockFiltersContainer.appendChild(div);
+        });
+    }
+
+    // Handle Checkbox Changes
+    blockFiltersContainer.addEventListener('change', () => {
+        // Just re-render results based on current query and new checkbox state
+        // We don't re-filter the block list visibility on checkbox change, only on text query change
+        filterAndRenderResults();
+    });
+
+    // --- GLYPH SUPPORT DETECTION ---
+    const glyphTestCanvas = document.createElement('canvas');
+    glyphTestCanvas.width = 32;
+    glyphTestCanvas.height = 32;
+    const glyphCtx = glyphTestCanvas.getContext('2d', { willReadFrequently: true });
+    glyphCtx.font = '24px sans-serif';
+    glyphCtx.textBaseline = 'middle';
+    glyphCtx.textAlign = 'center';
+
+    const tofuChar = '\u{10FFFF}'; // Max Unicode, likely unsupported
+    // Draw tofu once to get baseline
+    const tofuWidth = glyphCtx.measureText(tofuChar).width;
+    glyphCtx.clearRect(0,0,32,32);
+    glyphCtx.fillText(tofuChar, 16, 16);
+    const tofuData = glyphCtx.getImageData(0,0,32,32).data;
+    
+    const supportCache = new Map();
+
+    function isGlyphSupported(code) {
+        if (supportCache.has(code)) return supportCache.get(code);
+
+        const char = String.fromCodePoint(code);
+        
+        // 1. Fast Check: Width
+        const width = glyphCtx.measureText(char).width;
+        
+        // If width is 0, it's invisible or zero-width. 
+        // We consider these "unsupported" for favicon purposes (or at least valid to exclude).
+        if (width === 0) {
+            supportCache.set(code, false);
+            return false;
+        }
+
+        // If width is significantly different from tofu, it's likely supported
+        // (unless it's a different style of tofu, but standardizing on one helps)
+        if (Math.abs(width - tofuWidth) > 0.5) {
+             supportCache.set(code, true);
+             return true;
+        }
+
+        // 2. Slow Check: Pixel Comparison
+        // Characters with same width as tofu need pixel verification
+        glyphCtx.clearRect(0,0,32,32);
+        glyphCtx.fillText(char, 16, 16);
+        const data = glyphCtx.getImageData(0,0,32,32).data;
+
+        // Compare with tofu pixels
+        let isDifferent = false;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i] !== tofuData[i]) {
+                isDifferent = true;
+                break;
+            }
+        }
+
+        supportCache.set(code, isDifferent);
+        return isDifferent;
+    }
+
+    const debouncedSearch = debounce(performSearch, 300);
+    keywordInput.addEventListener('input', debouncedSearch);
+    codepointInput.addEventListener('input', debouncedSearch);
+
+    let currentMatches = []; // Store matches to avoid re-searching when only toggling blocks
+
+    function performSearch() {
+        if (!unicodeData || !unicodeBlocks) return;
+
+        const keyword = keywordInput.value.toLowerCase().trim();
+        const codepoint = codepointInput.value.toUpperCase().trim();
+        
+        // Check if we should search: Need at least 2 chars in either field
+        // Exception: If codepoint is just 1 char, maybe wait? Or let it fly?
+        // Let's stick to >=2 chars generally to avoid massive render of Plane 1 (1000 items instantly).
+        if (keyword.length < 2 && codepoint.length < 2) {
+            currentMatches = [];
+            // Show all blocks
+            const items = blockFiltersContainer.querySelectorAll('.block-filter-item');
+            items.forEach(item => item.style.display = 'flex');
+            searchResultsContainer.innerHTML = '<p class="placeholder-text">Type at least 2 characters...</p>';
+            return;
+        }
+
+        // 1. Search ALL data for text matches
+        currentMatches = [];
+        
+        // Optimization: For very large datasets, this linear scan is okay (77k items ~10-20ms in V8).
+        // A trie or index would be faster but this is acceptable for a prototype.
+        for (const item of unicodeData) {
+            // item is [code, name]
+            const hexCode = item[0].toString(16).toUpperCase();
+            
+            const matchKeyword = !keyword || item[1].toLowerCase().includes(keyword);
+            const matchCodepoint = !codepoint || hexCode.startsWith(codepoint);
+
+            if (matchKeyword && matchCodepoint) {
+                if (isGlyphSupported(item[0])) {
+                    currentMatches.push({ code: item[0], name: item[1] });
+                }
+            }
+        }
+
+        // 2. Identify which blocks have hits
+        const blocksWithHits = new Set();
+        // Map matches to blocks. Efficient way:
+        // We can sort matches by code, or just iterate. 
+        // Or, for each match, find its block.
+        // Since blocks are sorted ranges, binary search is best, but linear scan of blocks is slow per char.
+        // Let's optimize: Blocks are ranges.
+        // We can iterate through matches.
+        
+        // Actually, let's just create a set of "active block names" based on the matches.
+        // To do this fast:
+        // We can pre-calculate block assignment for every char? Memory heavy.
+        // Or just iterate: For each match, find which block it belongs to.
+        // With 346 blocks, `find` is 346 ops. With 1000 matches, 346k ops. Fast enough.
+        
+        currentMatches.forEach(match => {
+            // Find block
+            // Simple linear search is fine here
+            const block = unicodeBlocks.find(b => match.code >= b.start && match.code <= b.end);
+            if (block) {
+                blocksWithHits.add(block.name);
+            }
+        });
+
+        // 3. Update Block Filter Visibility
+        const filterItems = blockFiltersContainer.querySelectorAll('.block-filter-item');
+        filterItems.forEach(item => {
+            const name = item.dataset.blockName;
+            if (blocksWithHits.has(name)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // 4. Render Results
+        filterAndRenderResults();
+    }
+
+    function filterAndRenderResults() {
+        const keyword = keywordInput.value.toLowerCase().trim();
+        const codepoint = codepointInput.value.toUpperCase().trim();
+
+        if (!currentMatches.length && (keyword.length >= 2 || codepoint.length >= 2)) {
+            searchResultsContainer.innerHTML = '<p class="placeholder-text">No matches found.</p>';
+            return;
+        }
+
+        // Get currently checked blocks (only visible ones matter effectively, but let's check actual state)
+        const checkedBoxes = Array.from(blockFiltersContainer.querySelectorAll('input:checked'));
+        const checkedBlockNames = new Set(checkedBoxes.map(cb => cb.value));
+
+        // Filter matches by checked blocks
+        // We need to know block of each match again. 
+        // Doing it in one pass during performSearch would be better, but "filtering" is distinct.
+        // Let's re-verify block ownership.
+        
+        const resultsToRender = [];
+        const limit = 1000;
+
+        for (const match of currentMatches) {
+            if (resultsToRender.length >= limit) break;
+
+            // Check if its block is enabled
+            // Optimization: We could store the blockName on the match object in performSearch
+            // But let's just find it.
+            const block = unicodeBlocks.find(b => match.code >= b.start && match.code <= b.end);
+            if (block && checkedBlockNames.has(block.name)) {
+                resultsToRender.push(match);
+            }
+        }
+
+        renderResults(resultsToRender);
+    }
+
+    function renderResults(results) {
+        searchResultsContainer.innerHTML = '';
+        if (results.length === 0) {
+            const keyword = keywordInput.value.toLowerCase().trim();
+            const codepoint = codepointInput.value.toUpperCase().trim();
+            if (keyword.length >= 2 || codepoint.length >= 2) {
+                 searchResultsContainer.innerHTML = '<p class="placeholder-text">No matches in selected blocks.</p>';
+            }
+            return;
+        }
+
+        results.forEach(item => {
+            const char = String.fromCodePoint(item.code);
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.title = item.name;
+            div.innerHTML = `
+                <span class="result-char">${char}</span>
+                <span class="result-name">${item.name.toLowerCase()}</span>
+            `;
+            div.addEventListener('click', () => {
+                charInput.value = char;
+                updatePreview();
+                // Optional: Scroll generator into view on mobile
+                if (window.innerWidth <= 850) {
+                    document.querySelector('.generator-panel').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            searchResultsContainer.appendChild(div);
+        });
+    }
+
+    // --- END SEARCH LOGIC ---
+
     // Initial draw
     updatePreview();
 

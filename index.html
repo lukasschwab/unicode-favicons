@@ -8,49 +8,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Unicode Favicon Generator</h1>
-        
-        <div class="controls">
-            <div class="control-group">
-                <label for="charInput">Character (Emoji or Text)</label>
-                <input type="text" id="charInput" value="✨" maxlength="2" placeholder="e.g. A or 😃">
-            </div>
+    <div class="main-wrapper">
+        <div class="container generator-panel">
+            <h1>Favicon Generator</h1>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="charInput">Character</label>
+                    <input type="text" id="charInput" value="✨" maxlength="2" placeholder="e.g. A or 😃">
+                </div>
 
-            <div class="control-group">
-                <label for="colorInput">Color</label>
-                <div class="color-controls">
-                    <input type="color" id="colorInput" value="#000000">
-                    <input type="text" id="hexInput" value="#000000" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+                <div class="control-group">
+                    <label for="colorInput">Color</label>
+                    <div class="color-controls">
+                        <input type="color" id="colorInput" value="#000000">
+                        <input type="text" id="hexInput" value="#000000" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Background</label>
+                    <div class="checkbox-control">
+                        <input type="checkbox" id="bgTransparent" checked>
+                        <label for="bgTransparent" style="font-weight: normal;">Transparent</label>
+                    </div>
+                    <div class="color-controls" id="bgControls" style="opacity: 0.5; pointer-events: none;">
+                        <input type="color" id="bgColorInput" value="#ffffff">
+                        <input type="text" id="bgHexInput" value="#FFFFFF" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="rotationInput">Rotation (<span id="rotationValue">0</span>°)</label>
+                    <input type="range" id="rotationInput" min="0" max="360" value="0">
                 </div>
             </div>
 
-            <div class="control-group">
-                <label>Background</label>
-                <div class="checkbox-control">
-                    <input type="checkbox" id="bgTransparent" checked>
-                    <label for="bgTransparent" style="font-weight: normal;">Transparent</label>
-                </div>
-                <div class="color-controls" id="bgControls" style="opacity: 0.5; pointer-events: none;">
-                    <input type="color" id="bgColorInput" value="#ffffff">
-                    <input type="text" id="bgHexInput" value="#FFFFFF" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="canvas-container">
+                    <canvas id="previewCanvas" width="512" height="512"></canvas>
                 </div>
             </div>
 
-            <div class="control-group">
-                <label for="rotationInput">Rotation (<span id="rotationValue">0</span>°)</label>
-                <input type="range" id="rotationInput" min="0" max="360" value="0">
-            </div>
+            <button id="downloadBtn">Download Assets (ZIP)</button>
         </div>
 
-        <div class="preview-section">
-            <h2>Preview</h2>
-            <div class="canvas-container">
-                <canvas id="previewCanvas" width="512" height="512"></canvas>
+        <div class="container search-panel">
+            <h2>Find Character</h2>
+            
+            <div class="search-controls" style="display: flex; gap: 10px;">
+                <input type="text" id="keywordInput" placeholder="Keyword (e.g. 'smile')" autocomplete="off" style="flex: 2;">
+                <input type="text" id="codepointInput" placeholder="Hex Prefix (e.g. '1F')" autocomplete="off" style="flex: 1;">
+            </div>
+
+            <div class="filter-controls">
+                <label>Filter by Block:</label>
+                <div id="blockFilters" class="block-filters">
+                    <!-- Checkboxes injected by JS -->
+                </div>
+            </div>
+
+            <div id="searchResults" class="search-results">
+                <!-- Results injected by JS -->
+                <p class="placeholder-text">Type to search...</p>
             </div>
         </div>
-
-        <button id="downloadBtn">Download Assets (ZIP)</button>
     </div>
 
     <script src="app.js"></script>
