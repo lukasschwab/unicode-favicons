@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Let's re-verify block ownership.
         
         const resultsToRender = [];
-        const limit = 1000;
+        const limit = 5000;
 
         for (const match of currentMatches) {
             if (resultsToRender.length >= limit) break;
