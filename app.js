@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
     text {
       font-family: sans-serif;
       fill: ${color};
-      font-size: 60px;
+      font-size: 85px;
       dominant-baseline: middle;
       text-anchor: middle;
     }
