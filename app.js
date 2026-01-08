@@ -577,33 +577,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateSvg(text, color, rotation, isBgTransparent, bgColor) {
-        // We need to replicate the centering and scaling logic in SVG if possible.
-        // However, SVG "text" bounding box behavior varies. 
-        // A robust way for SVG is to just center it and let the user handle details,
-        // BUT we want it to match the canvas output.
-        // Since we can't easily "measure" text in a static SVG string generation without DOM,
-        // we will stick to a reasonable default or try to match the logic roughly.
-        // Actually, the simplest reliable SVG approach for a "perfect fit" is tricky without JS.
-        // We will keep the previous simple SVG logic but add the background rect.
+        // Create off-screen canvas for precise measurement
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const refSize = 100; // Reference size for measurement
+        ctx.font = `${refSize}px sans-serif`;
         
+        const metrics = ctx.measureText(text);
+        
+        // Calculate unrotated bounding box
+        const left = metrics.actualBoundingBoxLeft !== undefined ? -metrics.actualBoundingBoxLeft : 0;
+        const right = metrics.actualBoundingBoxRight !== undefined ? metrics.actualBoundingBoxRight : metrics.width;
+        const top = metrics.actualBoundingBoxAscent !== undefined ? -metrics.actualBoundingBoxAscent : -refSize * 0.8;
+        const bottom = metrics.actualBoundingBoxDescent !== undefined ? metrics.actualBoundingBoxDescent : refSize * 0.2;
+        
+        const w = right - left;
+        const h = bottom - top;
+        const cx = (left + right) / 2;
+        const cy = (top + bottom) / 2;
+
+        // Calculate rotated bounding box to determine scale
+        const angle = rotation * Math.PI / 180;
+        const corners = [
+            { x: left - cx, y: top - cy },
+            { x: right - cx, y: top - cy },
+            { x: right - cx, y: bottom - cy },
+            { x: left - cx, y: bottom - cy }
+        ];
+        
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        corners.forEach(p => {
+            const rx = p.x * Math.cos(angle) - p.y * Math.sin(angle);
+            const ry = p.x * Math.sin(angle) + p.y * Math.cos(angle);
+            minX = Math.min(minX, rx);
+            maxX = Math.max(maxX, rx);
+            minY = Math.min(minY, ry);
+            maxY = Math.max(maxY, ry);
+        });
+        
+        const rotatedW = maxX - minX;
+        const rotatedH = maxY - minY;
+        
+        // Target size is 100x100
+        const targetSize = 100;
+        // Prevent division by zero if empty string
+        const scale = (rotatedW > 0 && rotatedH > 0) ? Math.min(targetSize / rotatedW, targetSize / rotatedH) : 1;
+        
+        const fontSize = refSize * scale;
+        
+        // Position:
+        // We place the text origin so that the visual center (cx, cy) ends up at (50, 50).
+        // The text element's x/y attributes define the origin (0,0) of the glyph.
+        const tx = 50 - (cx * scale);
+        const ty = 50 - (cy * scale);
+
         let bgRect = '';
         if (!isBgTransparent) {
             bgRect = `<rect width="100%" height="100%" fill="${bgColor}"/>`;
         }
 
         return `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   ${bgRect}
   <style>
     text {
       font-family: sans-serif;
       fill: ${color};
-      font-size: 85px;
-      dominant-baseline: middle;
-      text-anchor: middle;
+      font-size: ${fontSize}px;
+      /* Default dominant-baseline (auto/alphabetic) and text-anchor (start) are used */
     }
   </style>
-  <text x="50" y="55" transform="rotate(${rotation}, 50, 50)">${text}</text>
+  <text x="${tx}" y="${ty}" transform="rotate(${rotation}, 50, 50)">${text}</text>
 </svg>`.trim();
     }
 });
