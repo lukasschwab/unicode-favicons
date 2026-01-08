@@ -527,7 +527,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(content);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'favicons.zip';
+        
+        const codePoint = text.codePointAt(0);
+        const hex = codePoint.toString(16).toUpperCase();
+        a.download = `U+${hex}.zip`;
+
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
