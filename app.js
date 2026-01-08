@@ -632,7 +632,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const ty = 50 - (cy * scale);
 
         let bgRect = '';
-        if (!isBgTransparent) {
+        let darkModeStyle = '';
+        if (isBgTransparent) {
+            if (color.toLowerCase() === '#000000') {
+                darkModeStyle = `
+    @media (prefers-color-scheme: dark) {
+      :root {
+        filter: invert(100%);
+      }
+    }`;
+            }
+        } else {
             bgRect = `<rect width="100%" height="100%" fill="${bgColor}"/>`;
         }
 
@@ -645,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fill: ${color};
       font-size: ${fontSize}px;
       /* Default dominant-baseline (auto/alphabetic) and text-anchor (start) are used */
-    }
+    }${darkModeStyle}
   </style>
   <text x="${tx}" y="${ty}" transform="rotate(${rotation}, 50, 50)">${text}</text>
 </svg>`.trim();
