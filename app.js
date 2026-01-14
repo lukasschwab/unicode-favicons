@@ -181,6 +181,21 @@ document.addEventListener('DOMContentLoaded', () => {
         filterAndRenderResults();
     });
 
+    // Select All / None Links
+    document.getElementById('selectAllLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        const checkboxes = blockFiltersContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        filterAndRenderResults();
+    });
+
+    document.getElementById('selectNoneLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        const checkboxes = blockFiltersContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        filterAndRenderResults();
+    });
+
     // --- GLYPH SUPPORT DETECTION ---
     const glyphTestCanvas = document.createElement('canvas');
     glyphTestCanvas.width = 32;

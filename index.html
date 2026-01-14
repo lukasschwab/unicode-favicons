@@ -63,17 +63,20 @@
             
             <div class="controls">
                 <div class="control-group">
-                    <label for="keywordInput">Keyword search</label>
-                    <input type="text" id="keywordInput" placeholder="e.g. 'smile'" autocomplete="off">
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="keywordInput">Keyword search</label>
+                            <input type="text" id="keywordInput" placeholder="e.g. 'smile'" autocomplete="off">
+                        </div>
+                        <div class="search-field">
+                            <label for="codepointInput">Hex prefix</label>
+                            <input type="text" id="codepointInput" placeholder="e.g. '1F'" autocomplete="off">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="control-group">
-                    <label for="codepointInput">Hex prefix</label>
-                    <input type="text" id="codepointInput" placeholder="e.g. '1F'" autocomplete="off">
-                </div>
-
-                <div class="control-group">
-                    <label>Filter by block</label>
+                    <label>Filter by block (select: <a href="#" id="selectAllLink">all</a> | <a href="#" id="selectNoneLink">none</a>)</label>
                     <div class="filter-controls">
                         <div id="blockFilters" class="block-filters">
                             <!-- Checkboxes injected by JS -->

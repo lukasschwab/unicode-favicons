@@ -79,6 +79,17 @@ h1, h2 {
     gap: 0.5rem;
 }
 
+.search-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.search-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 label {
     font-weight: 500;
     font-size: 0.9rem;
@@ -204,13 +215,14 @@ button:disabled {
 /* Filter Controls */
 .filter-controls {
     margin-bottom: 1rem;
-    max-height: 120px;
+    height: 120px;
     min-height: 80px;
     overflow-y: auto;
     border: 1px solid #000;
     padding: 10px;
     border-radius: 0;
     text-align: left;
+    resize: vertical;
 }
 
 .block-filters {
