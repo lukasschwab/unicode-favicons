@@ -176,6 +176,13 @@ canvas {
     display: block;
 }
 
+.codepoint-display {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: dimgray;
+    margin-top: 0.5rem;
+}
+
 .link-button {
     background: none;
     border: none;
@@ -266,6 +273,11 @@ button:disabled {
 .result-item:hover {
     background-color: #f0f0f0;
     border-color: #000;
+}
+
+.result-item:hover .result-name {
+    overflow: visible;
+    -webkit-line-clamp: unset;
 }
 
 .result-char {

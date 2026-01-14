@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotateCCW = document.getElementById('rotateCCW');
     const rotateCW = document.getElementById('rotateCW');
     const previewCanvas = document.getElementById('previewCanvas');
+    const codepointDisplay = document.getElementById('codepointDisplay');
     const downloadBtn = document.getElementById('downloadBtn');
 
     // Update preview on any input change
@@ -35,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         drawIcon(previewCanvas, text, color, rotation, isBgTransparent, bgColor);
+
+        // Update codepoint display
+        const codepoints = [...text].map(char => {
+            const hex = char.codePointAt(0).toString(16).toUpperCase();
+            return `U+${hex}`;
+        });
+        codepointDisplay.textContent = codepoints.length > 0 ? `[${codepoints.join(' ')}]` : '';
 
         // Update page favicon
         const faviconCanvas = document.createElement('canvas');
@@ -141,9 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.UNICODE_BLOCKS && window.UNICODE_DATA) {
                 unicodeBlocks = window.UNICODE_BLOCKS;
                 unicodeData = window.UNICODE_DATA;
-                
+
                 renderBlockFilters(unicodeBlocks);
-                searchResultsContainer.innerHTML = '';
+                performSearch();
             } else {
                 throw new Error('Data format incorrect');
             }
@@ -156,16 +164,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     loadData();
 
+    const supportedBlocks = new Set();
+
     function renderBlockFilters(blocks) {
         blockFiltersContainer.innerHTML = '';
+
+        // Sample each block to determine if it has any renderable characters
+        const excludedBlocks = [];
         blocks.forEach(block => {
+            if (isBlockSupported(block)) {
+                supportedBlocks.add(block.name);
+            } else {
+                excludedBlocks.push(block.name);
+            }
+        });
+
+        if (excludedBlocks.length > 0) {
+            console.log(`Excluded ${excludedBlocks.length} blocks with no renderable characters:`, excludedBlocks);
+        }
+
+        // Only render filters for supported blocks
+        blocks.forEach(block => {
+            if (!supportedBlocks.has(block.name)) return;
+
             const div = document.createElement('div');
             div.className = 'block-filter-item';
-            div.dataset.blockName = block.name; // For filtering visibility
-            
-            // Generate a safe ID
+            div.dataset.blockName = block.name;
+
             const safeId = 'block-' + block.name.replace(/[^a-zA-Z0-9]/g, '-');
-            
+
             div.innerHTML = `
                 <input type="checkbox" id="${safeId}" value="${block.name}" checked>
                 <label for="${safeId}">${block.name}</label>
@@ -213,6 +240,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const tofuData = glyphCtx.getImageData(0,0,32,32).data;
     
     const supportCache = new Map();
+
+    const BLOCK_SAMPLE_SIZE = 15;
+
+    function isBlockSupported(block) {
+        const range = block.end - block.start + 1;
+        const step = Math.max(1, Math.floor(range / BLOCK_SAMPLE_SIZE));
+
+        for (let i = 0; i < BLOCK_SAMPLE_SIZE; i++) {
+            const code = block.start + (i * step);
+            if (code > block.end) break;
+            if (isGlyphSupported(code)) return true;
+        }
+        return false;
+    }
 
     function isGlyphSupported(code) {
         if (supportCache.has(code)) return supportCache.get(code);
@@ -266,20 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const keyword = keywordInput.value.toLowerCase().trim();
         const codepoint = codepointInput.value.toUpperCase().trim();
-        
-        // Check if we should search: Need at least 2 chars in either field
-        // Exception: If codepoint is just 1 char, maybe wait? Or let it fly?
-        // Let's stick to >=2 chars generally to avoid massive render of Plane 1 (1000 items instantly).
-        if (keyword.length < 2 && codepoint.length < 2) {
-            currentMatches = [];
-            // Show all blocks
-            const items = blockFiltersContainer.querySelectorAll('.block-filter-item');
-            items.forEach(item => item.style.display = 'flex');
-            searchResultsContainer.innerHTML = '';
-            return;
-        }
 
-        // 1. Search ALL data for text matches
+        // 1. Search ALL data for text matches (glyph support checked lazily up to limit)
         currentMatches = [];
         
         // Optimization: For very large datasets, this linear scan is okay (77k items ~10-20ms in V8).
@@ -292,9 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchCodepoint = !codepoint || hexCode.startsWith(codepoint);
 
             if (matchKeyword && matchCodepoint) {
-                if (isGlyphSupported(item[0])) {
-                    currentMatches.push({ code: item[0], name: item[1] });
-                }
+                currentMatches.push({ code: item[0], name: item[1] });
             }
         }
 
@@ -362,10 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultsToRender.length >= limit) break;
 
             // Check if its block is enabled
-            // Optimization: We could store the blockName on the match object in performSearch
-            // But let's just find it.
             const block = unicodeBlocks.find(b => match.code >= b.start && match.code <= b.end);
-            if (block && checkedBlockNames.has(block.name)) {
+            if (block && checkedBlockNames.has(block.name) && isGlyphSupported(match.code)) {
                 resultsToRender.push(match);
             }
         }
