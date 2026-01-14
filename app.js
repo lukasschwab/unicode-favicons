@@ -35,6 +35,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         drawIcon(previewCanvas, text, color, rotation, isBgTransparent, bgColor);
+
+        // Update page favicon
+        const faviconCanvas = document.createElement('canvas');
+        faviconCanvas.width = 32;
+        faviconCanvas.height = 32;
+        drawIcon(faviconCanvas, text, color, rotation, isBgTransparent, bgColor);
+
+        let faviconLink = document.querySelector('link[rel="icon"]');
+        if (!faviconLink) {
+            faviconLink = document.createElement('link');
+            faviconLink.rel = 'icon';
+            document.head.appendChild(faviconLink);
+        }
+        faviconLink.href = faviconCanvas.toDataURL('image/png');
     };
 
     // Event Listeners
