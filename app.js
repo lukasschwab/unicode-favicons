@@ -572,7 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             theme_color: isBgTransparent ? "#ffffff" : bgColor,
             background_color: isBgTransparent ? "#ffffff" : bgColor,
-            display: "standalone"
+			"_note": "Add 'name', 'short_name', and 'display: standalone' to manifest a PWA",
+			"_spec": "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest"
         };
         zip.file('site.webmanifest', JSON.stringify(manifest, null, 2));
 
